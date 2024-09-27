@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+  Memories Project - Authentication Lambdas and other resources
+
+Parameters:
+  JWTSecretKey:
+    Type: String
+    Description: Secret Key for JWT Token
+    Default: secret
+
+Resources:
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: users
+      AttributeDefinitions:
+      - AttributeName: uuid
+        AttributeType: S
+      KeySchema:
+      - AttributeName: uuid
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  LoginLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: login_lambda.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./Login
+      Description: 'Login Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+      Events:
+        LoginEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /login
+            Method: post
+            ApiId: !Ref AuthApi
+      Environment:
+        Variables:
+          SECRET_KEY: !Ref JWTSecretKey
+
+  RegisterLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: register_lambda.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./Register
+      Description: 'Register Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+      Events:
+        RegisterEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /register
+            Method: post
+            ApiId: !Ref AuthApi
+      Environment:
+        Variables:
+          SECRET_KEY: !Ref JWTSecretKey
+
+  AuthApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: Prod
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'  # Allow requests from your frontend
+        AllowHeaders:
+          - Content-Type
+          - X-Amz-Date
+          - Authorization
+          - X-Api-Key
+          - X-Amz-Security-Token
+          - X-Amz-User-Agent
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+
+Outputs:
+  EndpointUrl:
+    Description: "API Endpoint URL"
+    Value: !Sub "https://${AuthApi}.execute-api.${AWS::Region}.amazonaws.com/prod"

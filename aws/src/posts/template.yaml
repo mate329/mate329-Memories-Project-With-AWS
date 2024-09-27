@@ -1,0 +1,350 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: 'AWS::Serverless-2016-10-31'
+Description: >
+  Memories Project - Post Lambdas and other resources
+
+Resources:
+  # JWTAuthorizerLambda:
+  #   Type: AWS::Serverless::Function
+  #   Properties:
+  #     Handler: lambda_handler.lambda_handler
+  #     Runtime: python3.8
+  #     CodeUri: ./JWTAuthorizer
+  #     Description: 'JWT Token Authorizer Lambda'
+  #     MemorySize: 128
+  #     Timeout: 30
+  #     Environment:
+  #       Variables:
+  #         JWT_SECRET: secret  # Replace with your actual secret key
+  #     Policies:
+  #       - AWSLambdaBasicExecutionRole
+
+  PostsAPI:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: Prod
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'  # Allow requests from your frontend
+        AllowHeaders:
+          - Content-Type
+          - X-Amz-Date
+          - Authorization
+          - X-Api-Key
+          - X-Amz-Security-Token
+          - X-Amz-User-Agent
+        AllowMethods:
+          - GET
+          - POST
+          - PUT
+          - DELETE
+          - OPTIONS
+      # Auth:
+      #   DefaultAuthorizer: JWTAuthorizer
+      #   Authorizers:
+      #     JWTAuthorizer:
+      #       FunctionArn: !GetAtt JWTAuthorizerLambda.Arn
+      #       Identity:
+      #         Headers:
+      #           - authorization
+      #       AuthorizerPayloadFormatVersion: '2.0'  # Required for Lambda authorizers
+      #       EnableSimpleResponses: true
+
+  CreatePostLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./CreatePost
+      Description: 'Create Post Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "s3:*"
+      Events:
+        CreatePostEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /createPost
+            Method: POST
+            ApiId: !Ref PostsAPI
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucketTest
+          POSTS_TABLE: !Ref PostsTable
+
+  GetPostLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./GetPost
+      Description: 'Get Post Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+                - "s3:*"
+      Events:
+        GetPostEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /getPost
+            Method: GET
+            ApiId: !Ref PostsAPI
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucketTest
+          POSTS_TABLE: !Ref PostsTable
+
+  SearchPostsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./SearchPosts
+      Description: 'Search Posts Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+                - "s3:*"
+      Events:
+        SearchPostsEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /searchPosts
+            Method: GET
+            ApiId: !Ref PostsAPI
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucketTest
+          POSTS_TABLE: !Ref PostsTable
+
+  GetAllPostsLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./GetAllPosts
+      Description: 'Get All Posts Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+                - "s3:*"
+      Events:
+        GetAllPostsEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /getAllPosts
+            Method: GET
+            ApiId: !Ref PostsAPI
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucketTest
+          POSTS_TABLE: !Ref PostsTable
+
+  GetPostsByUserLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./GetPostsByUser
+      Description: 'Get Posts By User Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+                - "s3:*"
+      Events:
+        GetAllPostsByUserEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /getPostsByUser
+            Method: GET
+            ApiId: !Ref PostsAPI
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucketTest
+          POSTS_TABLE: !Ref PostsTable
+
+  UpdatePostLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./UpdatePost
+      Description: 'Update Post Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+                - "s3:*"
+      Events:
+        UpdatePostEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /updatePost
+            Method: POST
+            ApiId: !Ref PostsAPI
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucketTest
+          POSTS_TABLE: !Ref PostsTable
+
+  DeletePostLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: lambda_handler.lambda_handler
+      Runtime: python3.8
+      CodeUri: ./DeletePost
+      Description: 'Delete Post Lambda'
+      MemorySize: 128
+      Timeout: 600
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: "Allow"
+              Resource: "*"
+              Action:
+                - "dynamodb:*"
+                - "s3:*"
+      Events:
+        UpdatePostEndpoint:
+          Type: HttpApi
+          Properties:
+            Path: /deletePost
+            Method: DELETE
+            ApiId: !Ref PostsAPI
+      Environment:
+        Variables:
+          IMAGES_BUCKET: !Ref ImagesBucketTest
+          POSTS_TABLE: !Ref PostsTable
+
+  ImagesBucketTest:
+    Type: AWS::S3::Bucket
+    Properties:
+      # BucketName: images-bucket
+      # AccessControl: PublicRead
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - "*"
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+            AllowedOrigins:
+              - "*"
+
+  PostsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: posts
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+
+  # CreatePostLambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt CreatePostLambda.Arn
+  #     Action: lambda:InvokeFunction
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PostsAPI}/*/*/*"
+
+  # GetPostLambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt GetPostLambda.Arn
+  #     Action: lambda:InvokeFunction
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PostsAPI}/*/*/*"
+
+  # GetAllPostsLambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt GetAllPostsLambda.Arn
+  #     Action: lambda:InvokeFunction
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PostsAPI}/*/*/*"
+
+  # GetPostsByUserLambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt GetPostsByUserLambda.Arn
+  #     Action: lambda:InvokeFunction
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PostsAPI}/*/*/*"
+
+  # UpdatePostLambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt UpdatePostLambda.Arn
+  #     Action: lambda:InvokeFunction
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PostsAPI}/*/*/*"
+
+  # DeletePostLambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt DeletePostLambda.Arn
+  #     Action: lambda:InvokeFunction
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PostsAPI}/*/*/*"
+
+  # JWTAuthorizerLambdaInvokePermission:
+  #   Type: AWS::Lambda::Permission
+  #   Properties:
+  #     FunctionName: !GetAtt JWTAuthorizerLambda.Arn
+  #     Action: lambda:InvokeFunction
+  #     Principal: apigateway.amazonaws.com
+  #     SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PostsAPI}/*/*/*"

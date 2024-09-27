@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "Auth"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-cqgy7l58hxc7"
+s3_prefix = "Auth"
+region = "eu-central-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "JWTSecretKey=\"secret\""
+image_repositories = []
